@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
 from configs.Database import create_db_and_tables
+from routers.FeedbackRouter import FeedbackRouter
 from routers.RequestsRouter import RequestsRouter
 from routers.ResultRouter import ResultRouter
 from routers.UserRouter import UserRouter
@@ -25,6 +26,7 @@ app.add_middleware(
 app.include_router(UserRouter)
 app.include_router(RequestsRouter)
 app.include_router(ResultRouter)
+app.include_router(FeedbackRouter)
 
 
 @app.on_event("startup")

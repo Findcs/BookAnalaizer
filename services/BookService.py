@@ -46,10 +46,17 @@ class BookService:
         return created_result
 
 
-    async def analyze(self, uploadFile: UploadFile, user: User):
-        text = await self.get_book_intro_mystem(uploadFile)
+    async def analyze(self, file: UploadFile, user: User):
+
+        book = Book()
+        book.book = file.file.read()
+        book.bookTitle = file.filename
+        book.user_id = user.id
+        text = await self.get_book_intro_mystem(file)
         tags = await self.freq_analyze(text)
-        return tags
+        book.tags = tags
+        created_book = await self.request_repository.create(book)
+        return created_book.tags
 
     async def freq_analyze(self, text: str):
         """
