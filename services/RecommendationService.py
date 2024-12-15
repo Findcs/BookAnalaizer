@@ -80,4 +80,4 @@ class RecommendationService:
 
         # Шаг 5: Сортировка по итоговому весу и возврат результата
         recommendations.sort(key=lambda x: x[1], reverse=True)
-        return [r[0] for r in recommendations[:top_n]]
+        return [r for r in recommendations[:top_n]]
