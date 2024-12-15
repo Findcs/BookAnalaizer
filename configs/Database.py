@@ -42,20 +42,18 @@ class Book(EntityMeta):
     __tablename__ = 'books'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    time = Column(DateTime, default=datetime.datetime.utcnow())
-    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
-    user: Mapped["User"] = relationship("User", back_populates="books")
-    tags = Column(ARRAY(String))
-    book = Column(LargeBinary)
-    bookTitle = Column(String)
-    rating = Column(Float, default=0.0)
-    rating_ammount = Column(Integer, default=0)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))  # Кто добавил книгу
+    bookTitle: Mapped[str] = mapped_column(String, nullable=False)  # Название книги (краткое)
+    tags = Column(ARRAY(String))  # Теги книги
+    time: Mapped[datetime.datetime] = mapped_column(default=datetime.datetime.utcnow())  # Время добавления
 
-    # Новые связи
+    # Связь с BibliographicReference (1:1)
     bibliographic_reference: Mapped["BibliographicReference"] = relationship(
         "BibliographicReference", back_populates="book", uselist=False
     )
-    feedbacks: Mapped[list["BookFeedback"]] = relationship("BookFeedback", back_populates="book")
+
+    # Связь с пользователем
+    user: Mapped["User"] = relationship("User", back_populates="books")
 
 
 
@@ -63,31 +61,36 @@ class BookFeedback(EntityMeta):
     __tablename__ = 'book_feedback'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    book_id: Mapped[int] = mapped_column(ForeignKey("books.id"))
-    rating: Mapped[float] = mapped_column(Float)  # Оценка пользователя
-    comment: Mapped[str] = mapped_column(String, nullable=True)
-    created_at: Mapped[datetime.datetime] = mapped_column(default=datetime.datetime.utcnow)
+    bibliographic_reference_id: Mapped[int] = mapped_column(ForeignKey("bibliographic_references.id"))  # Связь с BibliographicReference
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"))  # Кто оставил отзыв
+    rating: Mapped[float] = mapped_column(Float, nullable=False)  # Оценка
+    comment: Mapped[str] = mapped_column(String, nullable=True)  # Комментарий
+    created_at: Mapped[datetime.datetime] = mapped_column(default=datetime.datetime.utcnow())  # Время добавления
 
-    # Связи
-    user: Mapped["User"] = relationship("User", back_populates="feedbacks")
-    book: Mapped["Book"] = relationship("Book", back_populates="feedbacks")
+    # Связь с BibliographicReference
+    bibliographic_reference: Mapped["BibliographicReference"] = relationship("BibliographicReference", back_populates="feedbacks")
+
+    # Связь с User
+    user: Mapped["User"] = relationship("User")
 
 
 class BibliographicReference(EntityMeta):
     __tablename__ = 'bibliographic_references'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    book_id: Mapped[int] = mapped_column(ForeignKey("books.id"), unique=True)  # Связь с книгой
-    title: Mapped[str] = mapped_column(String)
-    author: Mapped[str] = mapped_column(String)
-    publisher: Mapped[str] = mapped_column(String)
-    average_rating: Mapped[float] = mapped_column(Float, default=0.0)
-    rating_count: Mapped[int] = mapped_column(Integer, default=0)
-    views: Mapped[int] = mapped_column(Integer, default=0)  # Количество просмотров книги
+    book_id: Mapped[int] = mapped_column(ForeignKey("books.id"), unique=True)  # Связь с Book (1:1)
+    title: Mapped[str] = mapped_column(String, nullable=False)  # Полное название
+    author: Mapped[str] = mapped_column(String, nullable=False)  # Автор
+    publisher: Mapped[str] = mapped_column(String, nullable=False)  # Издательство
+    average_rating: Mapped[float] = mapped_column(Float, default=0.0)  # Рейтинг книги
+    rating_count: Mapped[int] = mapped_column(Integer, default=0)  # Количество оценок
 
-    # Связь с книгой
+    # Связь с Book
     book: Mapped["Book"] = relationship("Book", back_populates="bibliographic_reference")
+
+    # Связь с Feedback (1:N)
+    feedbacks: Mapped[list["BookFeedback"]] = relationship("BookFeedback", back_populates="bibliographic_reference")
+
 
 class Result(EntityMeta):
     __tablename__ = 'results'

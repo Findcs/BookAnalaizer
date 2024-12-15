@@ -7,7 +7,7 @@ from routers.FeedbackRouter import FeedbackRouter
 from routers.RequestsRouter import RequestsRouter
 from routers.ResultRouter import ResultRouter
 from routers.UserRouter import UserRouter
-
+from routers.BibliographicReferenceRouter import BibliographicRouter
 app = FastAPI()
 
 origins = [
@@ -27,6 +27,7 @@ app.include_router(UserRouter)
 app.include_router(RequestsRouter)
 app.include_router(ResultRouter)
 app.include_router(FeedbackRouter)
+app.include_router(BibliographicRouter)
 
 
 @app.on_event("startup")

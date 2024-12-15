@@ -1,30 +1,37 @@
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 from repositories.FeedbackRepository import FeedbackRepository
+from repositories.BibliographicReferenceRepository import BibliographicReferenceRepository
 from uuid import UUID
 
 
 class FeedbackService:
-    """
-    Сервис для работы с отзывами о книгах и обновления их рейтинга.
-    """
-
-    def __init__(self, repository: FeedbackRepository = Depends()):
+    def __init__(
+        self,
+        repository: FeedbackRepository = Depends(),
+        bibliographic_repository: BibliographicReferenceRepository = Depends()
+    ):
         self.repository = repository
+        self.bibliographic_repository = bibliographic_repository
 
-    async def add_feedback(self, user_id: UUID, book_id: int, rating: float, comment: str = None) -> dict:
+    async def add_feedback(self, user_id: UUID, bibliographic_reference_id: int, rating: float, comment: str = None) -> dict:
         """
-        Добавляет отзыв и обновляет рейтинг книги.
+        Добавляет отзыв и обновляет рейтинг библиографической справки.
         """
-        # Добавляем отзыв в базу данных
-        feedback = await self.repository.add_feedback(user_id, book_id, rating, comment)
+        # Проверяем, существует ли BibliographicReference
+        bibliographic = await self.bibliographic_repository.get_by_id(bibliographic_reference_id)
+        if not bibliographic:
+            raise HTTPException(status_code=404, detail="Bibliographic reference not found")
 
-        # Пересчитываем средний рейтинг книги
-        book_rating = await self.repository.update_book_rating(book_id)
+        # Добавляем отзыв
+        feedback = await self.repository.add_feedback(user_id, bibliographic_reference_id, rating, comment)
 
-        # Возвращаем результат
+        # Пересчитываем средний рейтинг библиографической справки
+        bibliographic_rating = await self.repository.update_bibliographic_rating(bibliographic_reference_id)
+
         return {
             "message": "Feedback added successfully",
             "feedback_id": feedback.id,
-            "average_rating": book_rating["average_rating"],
-            "rating_count": book_rating["rating_count"]
+            "average_rating": bibliographic_rating["average_rating"],
+            "rating_count": bibliographic_rating["rating_count"]
         }
+

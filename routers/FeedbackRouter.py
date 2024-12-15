@@ -15,13 +15,13 @@ FeedbackRouter = APIRouter(prefix="/v1/feedback", tags=["feedback"])
 )
 async def add_feedback(
     user_id: UUID,
-    book_id: int,
+    bibliographic_reference_id: int,
     rating: float,
     comment: str = None,
     manager: FeedbackService = Depends()
 ):
     try:
-        result = await manager.add_feedback(user_id, book_id, rating, comment)
+        result = await manager.add_feedback(user_id, bibliographic_reference_id, rating, comment)
         return result
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
