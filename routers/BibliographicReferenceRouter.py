@@ -87,3 +87,15 @@ async def get_references_by_section(
         return await service.get_references_by_section(section_id)
     except Exception:
         raise HTTPException(status_code=500, detail="Internal Server Error")
+
+@BibliographicRouter.get("/with-sections", response_model=list[BibliographicReferenceSchema])
+async def get_all_references_with_sections(
+        service: BibliographicReferenceService = Depends()
+):
+    try:
+        return await service.get_all_references_with_sections()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+
+
+

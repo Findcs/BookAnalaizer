@@ -54,7 +54,9 @@ class BookService:
         book.tags = tags
         book.section_id = 1
         created_book = await self.request_repository.create(book)
-        return created_book.tags
+        return {
+            "id" : book.id ,
+            "tags" : book.tags}
 
     async def freq_analyze(self, text: str):
         """

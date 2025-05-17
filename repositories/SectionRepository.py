@@ -9,7 +9,7 @@ from sqlalchemy.orm import selectinload
 from configs.Database import get_async_session, BibliographicReference, Section, Book
 
 
-class FeedbackRepository:
+class SectionRepository:
     db: AsyncSession
 
     def __init__(self, db: AsyncSession = Depends(get_async_session)) -> None:
@@ -32,7 +32,6 @@ class FeedbackRepository:
 
     async def add_section(self, name:str, description:str) -> Section:
         section = Section(name=name, description=description)
-        self.db.add(section)
         self.db.add(section)
         await self.db.commit()
         await self.db.refresh(section)

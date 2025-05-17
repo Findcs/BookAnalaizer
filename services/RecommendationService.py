@@ -4,6 +4,7 @@ from math import sin, pi, exp
 import datetime
 from repositories.FeedbackRepository import FeedbackRepository
 from repositories.BibliographicReferenceRepository import BibliographicReferenceRepository
+from repositories.RequestRepository import RequestRepository
 
 
 class RecommendationService:
@@ -31,13 +32,15 @@ class RecommendationService:
     def __init__(
         self,
         feedback_repository: FeedbackRepository = Depends(),
-        bibliographic_repository: BibliographicReferenceRepository = Depends()
+        bibliographic_repository: BibliographicReferenceRepository = Depends(),
+        request_repository: RequestRepository = Depends()
     ):
         """
         Инициализация сервисов для работы с отзывами и библиографическими справками.
         """
         self.feedback_repository = feedback_repository
         self.bibliographic_repository = bibliographic_repository
+        self.request_repository = request_repository
 
     async def get_recommendations(self, bibliographic_reference_id: int, top_n: int = 5):
         """
@@ -47,12 +50,10 @@ class RecommendationService:
         :param top_n: Количество рекомендаций для возврата.
         :return: Список рекомендованных книг с их итоговыми весами.
         """
-        # Шаг 1: Получить текущую библиографическую справку и связанные теги книги
-        reference = await self.bibliographic_repository.get_by_id(bibliographic_reference_id)
-        if not reference:
-            raise HTTPException(status_code=404, detail="Bibliographic reference not found")
 
-        book = await self.bibliographic_repository.get_book_by_bibliographic_reference_id(bibliographic_reference_id)
+        #book = await self.bibliographic_repository.get_book_by_bibliographic_reference_id(bibliographic_reference_id)
+
+        book = await self.request_repository.get_by_id(bibliographic_reference_id)
         if not book:
             raise HTTPException(status_code=404, detail="Book not found")
 
@@ -105,7 +106,7 @@ class RecommendationService:
                 normalized_time_weight * self.TIME_WEIGHT_COEFFICIENT
             )
 
-            recommendations.append((ref, final_weight))
+            recommendations.append((ref, final_weight, f"{ref.author}. {ref.title}. – {ref.city}: {ref.publisher}, {ref.year}. – {ref.pages} с."))
 
         # Шаг 5: Сортировка по итоговому весу и возврат результата
         recommendations.sort(key=lambda x: x[1], reverse=True)

@@ -23,3 +23,7 @@ class RequestRepository:
             select(Book).where(Book.user_id == user_id)
         )
         return result.scalars().all()
+
+    async def get_by_id(self, request_id: int) -> Book:
+        result = await self.db.execute(select(Book).filter(Book.id == request_id))
+        return result.scalar_one_or_none()

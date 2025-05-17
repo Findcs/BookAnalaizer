@@ -117,3 +117,14 @@ class BibliographicReferenceRepository:
             .where(Book.section_id == section_id)  # фильтрация по разделу
         )
         return result.scalars().all()
+
+    async def get_all_with_sections(self):
+        """
+        Возвращает все библиографические справки с их секциями.
+        """
+        result = await self.db.execute(
+            select(BibliographicReference)
+            .join(BibliographicReference.book)  # JOIN book
+            .options(selectinload(BibliographicReference.book))  # для сериализации
+        )
+        return result.scalars().all()
