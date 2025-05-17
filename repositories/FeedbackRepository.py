@@ -3,7 +3,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import func
 from uuid import UUID
-from configs.Database import get_async_session , BibliographicReference, BookFeedback
+
+from sqlalchemy.orm import selectinload
+
+from configs.Database import get_async_session, BibliographicReference, BookFeedback, Book
 
 
 class FeedbackRepository:
@@ -11,6 +14,24 @@ class FeedbackRepository:
 
     def __init__(self, db: AsyncSession = Depends(get_async_session)) -> None:
         self.db = db
+
+    async def get_by_id(self, feedback_id: int) -> BookFeedback:
+        """
+        Возвращает отзыв по его ID.
+        """
+        result = await self.db.execute(
+            select(BookFeedback).filter(BookFeedback.id == feedback_id)
+        )
+        return result.scalar_one_or_none()
+
+    async def get_by_bibliographic_reference_id(self, bibliographic_reference_id: int) -> list[BookFeedback]:
+        """
+        Возвращает отзывы по ID библиографической справки.
+        """
+        result = await self.db.execute(
+            select(BookFeedback).filter(BookFeedback.bibliographic_reference_id == bibliographic_reference_id)
+        )
+        return result.scalars().all()
 
     async def add_feedback(self, user_id: UUID, bibliographic_reference_id: int, rating: float, comment: str = None) -> BookFeedback:
         """
@@ -72,3 +93,30 @@ class FeedbackRepository:
         k = max_rating_count / 10 if max_rating_count > 0 else 0
 
         return global_avg_rating, k
+
+    async def get_feedbacks_by_book_id(self, book_id: int):
+        """
+        Возвращает все отзывы на книгу через библиографическую справку.
+        """
+        # Получаем библиографическую справку по book_id
+        result = await self.db.execute(
+            select(BookFeedback)
+            .join(BibliographicReference)
+            .options(selectinload(BookFeedback.user))
+            .where(BibliographicReference.book_id == book_id)
+        )
+        feedbacks = result.scalars().all()
+
+        # теперь добавим каждому пользователю поле `rating`
+        for feedback in feedbacks:
+            user_id = feedback.user.id
+            rating_result = await self.db.execute(
+                select(func.avg(BookFeedback.rating))
+                .join(BibliographicReference, BookFeedback.bibliographic_reference_id == BibliographicReference.id)
+                .join(Book, BibliographicReference.book_id == Book.id)
+                .where(Book.user_id == user_id)
+            )
+            avg_rating = rating_result.scalar()
+            feedback.user.rating = round(avg_rating, 2) if avg_rating else 0.0
+
+        return feedbacks

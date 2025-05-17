@@ -1,5 +1,6 @@
 from fastapi import Depends, HTTPException
 from repositories.BibliographicReferenceRepository import BibliographicReferenceRepository
+from repositories.RequestRepository import RequestRepository
 
 
 class BibliographicReferenceService:
@@ -9,7 +10,7 @@ class BibliographicReferenceService:
     def __init__(self, repository: BibliographicReferenceRepository = Depends()):
         self.repository = repository
 
-    async def create_reference(self, book_id: int, title: str, author: str, publisher: str):
+    async def create_reference(self, book_id: int, title: str, author: str, publisher: str,isbn: str,year: int, city:str, pages:int):
         """
         Создает новую библиографическую справку для книги.
         """
@@ -19,7 +20,15 @@ class BibliographicReferenceService:
             raise HTTPException(status_code=400, detail="Bibliographic reference already exists for this book")
 
         # Создаем новую справку
-        return await self.repository.create_bibliographic_reference(book_id, title, author, publisher)
+        return await self.repository.create_bibliographic_reference(book_id, title, author, publisher,isbn,year, city, pages)
+
+    async def get_all_references(self):
+        """
+        Возвращает все библиографические справки.
+        """
+        references = await self.repository.get_all()
+        return references
+
 
     async def get_reference_by_id(self, bibliographic_reference_id: int):
         """
@@ -59,3 +68,12 @@ class BibliographicReferenceService:
         Возвращает список всех библиографических справок с книгами.
         """
         return await self.repository.get_all_with_books()
+
+    async def get_all_references_with_tags(self):
+        """
+        Возвращает список всех библиографических справок с тегами.
+        """
+        return await self.repository.get_all_with_tags()
+
+    async def get_references_by_section(self, section_id: int):
+        return await self.repository.get_all_with_tags_by_section(section_id)

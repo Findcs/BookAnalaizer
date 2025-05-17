@@ -1,7 +1,7 @@
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
-
+from sqlalchemy.future import select
 from configs.Database import get_async_session, Book
 
 
@@ -17,3 +17,9 @@ class RequestRepository:
         self.db.add(request)
         await self.db.commit()
         return request
+
+    async def get_all_user_books(self, user_id) -> list[Book]:
+        result = await self.db.execute(
+            select(Book).where(Book.user_id == user_id)
+        )
+        return result.scalars().all()

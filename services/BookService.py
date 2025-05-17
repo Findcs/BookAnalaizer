@@ -6,11 +6,10 @@ from pymystem3 import Mystem
 
 from fastapi import Depends, UploadFile
 
-from configs.Database import Book, User, Result
+from configs.Database import Book, User
 from modules.get_book_intro.main import get_book_intro
 from modules.tags_extract.main import get_keywords
 from repositories.RequestRepository import RequestRepository
-from repositories.ResultRepository import ResultRepository
 from schemas.RequestSchema import RequestCreate
 from itertools import chain
 from nltk import FreqDist
@@ -18,33 +17,31 @@ from nltk import FreqDist
 
 class BookService:
     request_repository: RequestRepository
-    result_repository: ResultRepository
-
-    def __init__(self, request_repository: RequestRepository = Depends(),
-                 result_repository: ResultRepository = Depends()):
+    def __init__(self, request_repository: RequestRepository = Depends()):
         self.analizator = Mystem()
         self.request_repository = request_repository
-        self.result_repository = result_repository
 
-    async def create(self, file: UploadFile, user: User) -> RequestCreate:
-        result_req = RequestCreate()
+    # async def create(self, file: UploadFile, user: User) -> RequestCreate:
+    #     result_req = RequestCreate()
+    #
+    #     req = Book()
+    #     req.book = file.file.read()
+    #     req.bookTitle = file.filename
+    #     req.user_id = user.id
+    #     created_req = await self.request_repository.create(req)
+    #     intro = await get_book_intro(file)
+    #     tags = []
+    #     for i in intro:
+    #         tags += list(await get_keywords(i))
+    #     result: Result = Result()
+    #     result.bookTitle = created_req.bookTitle
+    #     result.BookId = created_req.id
+    #     result.tags = tags
+    #     created_result = await self.result_repository.create(result)
+    #     return created_result
 
-        req = Book()
-        req.book = file.file.read()
-        req.bookTitle = file.filename
-        req.user_id = user.id
-        created_req = await self.request_repository.create(req)
-        intro = await get_book_intro(file)
-        tags = []
-        for i in intro:
-            tags += list(await get_keywords(i))
-        result: Result = Result()
-        result.bookTitle = created_req.bookTitle
-        result.BookId = created_req.id
-        result.tags = tags
-        created_result = await self.result_repository.create(result)
-        return created_result
-
+    async def get_all_user_books(self, user_id):
+        return await self.request_repository.get_all_user_books(user_id)
 
     async def analyze(self, file: UploadFile, user: User):
 
@@ -55,6 +52,7 @@ class BookService:
         text = await self.get_book_intro_mystem(file)
         tags = await self.freq_analyze(text)
         book.tags = tags
+        book.section_id = 1
         created_book = await self.request_repository.create(book)
         return created_book.tags
 

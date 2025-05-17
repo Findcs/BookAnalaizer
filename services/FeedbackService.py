@@ -35,3 +35,15 @@ class FeedbackService:
             "rating_count": bibliographic_rating["rating_count"]
         }
 
+    async def get_by_bibliographic_reference_id(self, bibliographic_reference_id: int) -> list[dict]:
+        """
+        Возвращает отзывы по ID библиографической справки.
+        """
+        return await self.repository.get_by_bibliographic_reference_id(bibliographic_reference_id)
+
+
+    async def get_feedbacks_for_book(self, book_id: int):
+        feedbacks = await self.repository.get_feedbacks_by_book_id(book_id)
+        if not feedbacks:
+            raise HTTPException(status_code=404, detail="Feedback not found")
+        return feedbacks

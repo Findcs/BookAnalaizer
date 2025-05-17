@@ -5,8 +5,8 @@ from starlette.middleware.cors import CORSMiddleware
 from configs.Database import create_db_and_tables
 from routers.FeedbackRouter import FeedbackRouter
 from routers.RequestsRouter import RequestsRouter
-from routers.ResultRouter import ResultRouter
 from routers.UserRouter import UserRouter
+from routers.DocumentRouter import DocumentRouter
 from routers.BibliographicReferenceRouter import BibliographicRouter
 app = FastAPI()
 
@@ -25,11 +25,9 @@ app.add_middleware(
 
 app.include_router(UserRouter)
 app.include_router(RequestsRouter)
-app.include_router(ResultRouter)
 app.include_router(FeedbackRouter)
 app.include_router(BibliographicRouter)
-
-
+app.include_router(DocumentRouter)
 @app.on_event("startup")
 async def on_startup():
     await create_db_and_tables()
